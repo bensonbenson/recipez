@@ -1,3 +1,4 @@
+import React from "react";
 import { Recipe } from "../api/getRecipe";
 
 type RecipeDetailsProps = {
@@ -17,7 +18,14 @@ export const RecipeDetails = (props: RecipeDetailsProps) => {
         ))}
       </ul>
       <h3>Instructions</h3>
-      <p>{recipe.instructions}</p>
+      {recipe.instructions.split("\n").map((item, idx) => {
+        return (
+          <React.Fragment key={idx}>
+            {item}
+            <br />
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };
