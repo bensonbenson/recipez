@@ -10,5 +10,5 @@ calls a flask backend to scrape the web for a given recipe url and gets only the
 
 ```
 npm install
-npm start
+npm run dev
 ```
