@@ -24,7 +24,6 @@ export const getRecipe = async (recipeUrl: string) => {
     const recipe: Recipe = response.data;
     return recipe;
   } catch (error) {
-    console.error("Error fetching recipe:", error);
     throw new Error("Failed to fetch recipe");
   }
 };

@@ -12,6 +12,7 @@ export const RecipePage = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUrlError, setIsUrlError] = useState(false);
+  const [requestError, setRequestError] = useState(false);
 
   const handleRecipeUrlChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -27,11 +28,12 @@ export const RecipePage = () => {
 
   const handleButtonClick = async () => {
     setIsLoading(true);
+    setRequestError(false);
     try {
       const recipe: Recipe = await getRecipe(recipeUrl);
       setRecipe(recipe);
     } catch (error) {
-      console.error("Error fetching recipe:", error);
+      setRequestError(true);
     }
 
     setIsLoading(false);
@@ -60,6 +62,7 @@ export const RecipePage = () => {
           give recipe
         </Button>
       </div>
+      {requestError && <h2>unsupported url!</h2>}
       {isLoading && <LoadingText />}
       {recipe && <RecipeDetails recipe={recipe} />}
     </div>
