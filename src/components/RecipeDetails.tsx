@@ -11,7 +11,7 @@ export const RecipeDetails = (props: RecipeDetailsProps) => {
   return (
     <div>
       <h2>{recipe.title}</h2>
-      <h3>{`${recipe.total_time} min` || ""}</h3>
+      <h3>{recipe.total_time ? `${recipe.total_time} min` : null}</h3>
       <h3>{recipe.yields || ""}</h3>
       <h3>ingredients</h3>
       <ul>
