@@ -11,17 +11,20 @@ export const RecipeDetails = (props: RecipeDetailsProps) => {
   return (
     <div>
       <h2>{recipe.title}</h2>
-      <h3>Ingredients</h3>
+      <h3>{`${recipe.total_time} min` || ""}</h3>
+      <h3>{recipe.yields || ""}</h3>
+      <h3>ingredients</h3>
       <ul>
         {recipe.ingredients.map((ingredient, index) => (
           <li key={index}>{ingredient}</li>
         ))}
       </ul>
-      <h3>Instructions</h3>
+      <h3>instructions</h3>
       {recipe.instructions.split("\n").map((item, idx) => {
         return (
           <React.Fragment key={idx}>
             {item}
+            <br />
             <br />
           </React.Fragment>
         );

@@ -6,6 +6,8 @@ export type Recipe = {
   title: string;
   ingredients: string[];
   instructions: string;
+  yields?: string;
+  total_time?: string;
 };
 
 export const getRecipe = async (recipeUrl: string) => {

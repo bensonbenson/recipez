@@ -1,9 +1,8 @@
-import "./App.css";
 import { RecipePage } from "./components/RecipePage";
 
 function App() {
   return (
-    <div className="App">
+    <div>
       <RecipePage />
     </div>
   );

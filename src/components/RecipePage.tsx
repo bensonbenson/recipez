@@ -4,16 +4,25 @@ import { getRecipe } from "../api/getRecipe";
 import { Recipe } from "../api/getRecipe";
 import { RecipeDetails } from "./RecipeDetails";
 import { LoadingText } from "./LoadingText";
+import { isValidUrl } from "../utils/utils";
+import "../styles/RecipePage.css";
 
 export const RecipePage = () => {
   const [recipeUrl, setRecipeUrl] = useState("");
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUrlError, setIsUrlError] = useState(false);
 
   const handleRecipeUrlChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRecipeUrl(event.target.value);
+    const { value } = event.target;
+    setRecipeUrl(value);
+    if (value && !isValidUrl(value)) {
+      setIsUrlError(true);
+    } else {
+      setIsUrlError(false);
+    }
   };
 
   const handleButtonClick = async () => {
@@ -29,7 +38,7 @@ export const RecipePage = () => {
   };
 
   return (
-    <div>
+    <div className="basePage">
       <h1>recip-ez</h1>
       <TextField
         variant="outlined"
@@ -37,10 +46,20 @@ export const RecipePage = () => {
         onChange={handleRecipeUrlChange}
         value={recipeUrl}
         disabled={isLoading}
+        error={isUrlError}
+        helperText={isUrlError ? "invalid url" : ""}
       />
-      <Button onClick={handleButtonClick} disabled={isLoading}>
-        find recipe
-      </Button>
+      <div className="findRecipeButtonContainer">
+        <Button
+          sx={{ textTransform: "lowercase" }}
+          onClick={handleButtonClick}
+          disabled={isLoading}
+          variant="contained"
+          className="findRecipeButton"
+        >
+          give recipe
+        </Button>
+      </div>
       {isLoading && <LoadingText />}
       {recipe && <RecipeDetails recipe={recipe} />}
     </div>

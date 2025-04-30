@@ -1,0 +1,13 @@
+.basePage {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.findRecipeButtonContainer {
+  margin-top: 20px;
+}
+
+.findRecipeButton {
+  width: 25%;
+}
