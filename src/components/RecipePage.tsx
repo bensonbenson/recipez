@@ -26,7 +26,7 @@ export const RecipePage = () => {
     }
   };
 
-  const handleButtonClick = async () => {
+  const handleRecipeSearch = async () => {
     setIsLoading(true);
     setRequestError(false);
     try {
@@ -39,29 +39,37 @@ export const RecipePage = () => {
     setIsLoading(false);
   };
 
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await handleRecipeSearch();
+  }
+
   return (
     <div className="basePage">
       <h1>recip-ez</h1>
-      <TextField
-        variant="outlined"
-        label="recipe url"
-        onChange={handleRecipeUrlChange}
-        value={recipeUrl}
-        disabled={isLoading}
-        error={isUrlError}
-        helperText={isUrlError ? "invalid url" : ""}
-      />
-      <div className="findRecipeButtonContainer">
-        <Button
-          sx={{ textTransform: "lowercase" }}
-          onClick={handleButtonClick}
+      <form onSubmit={handleSubmit}>
+        <TextField
+          variant="outlined"
+          label="recipe url"
+          onChange={handleRecipeUrlChange}
+          value={recipeUrl}
           disabled={isLoading}
-          variant="contained"
-          className="findRecipeButton"
-        >
-          give recipe
-        </Button>
-      </div>
+          error={isUrlError}
+          helperText={isUrlError ? "invalid url" : ""}
+          style={{ width: "100%" }}
+        />
+        <div className="findRecipeButtonContainer">
+          <Button
+            sx={{ textTransform: "lowercase" }}
+            onClick={handleRecipeSearch}
+            disabled={isLoading}
+            variant="contained"
+            className="findRecipeButton"
+          >
+            give recipe
+          </Button>
+        </div>
+      </form>
       {requestError && <h2>unsupported url!</h2>}
       {isLoading && <LoadingText />}
       {recipe && <RecipeDetails recipe={recipe} />}
