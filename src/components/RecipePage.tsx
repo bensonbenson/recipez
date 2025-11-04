@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextField, Button } from "@mui/material";
 import { getRecipe } from "../api/getRecipe";
 import { Recipe } from "../api/getRecipe";
@@ -14,11 +14,37 @@ export const RecipePage = () => {
   const [isUrlError, setIsUrlError] = useState(false);
   const [requestError, setRequestError] = useState(false);
 
+  const updateUrlQuery = (url: string) => {
+    const currentUrl = new URL(window.location.href);
+    if (url.trim()) {
+      currentUrl.searchParams.set('recipeUrl', url);
+    } else {
+      currentUrl.searchParams.delete('recipeUrl');
+    }
+    window.history.replaceState({}, '', currentUrl.toString());
+  };
+
+  const getUrlFromQuery = (): string => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('recipeUrl') || '';
+  };
+
+  useEffect(() => {
+    const urlFromQuery = getUrlFromQuery();
+    if (urlFromQuery) {
+      setRecipeUrl(urlFromQuery);
+      if (isValidUrl(urlFromQuery)) {
+        handleRecipeSearch(urlFromQuery);
+      }
+    }
+  }, []);
+
   const handleRecipeUrlChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { value } = event.target;
     setRecipeUrl(value);
+    updateUrlQuery(value);
     if (value && !isValidUrl(value)) {
       setIsUrlError(true);
     } else {
@@ -26,11 +52,12 @@ export const RecipePage = () => {
     }
   };
 
-  const handleRecipeSearch = async () => {
+  const handleRecipeSearch = async (urlToSearch?: string) => {
+    const targetUrl = urlToSearch || recipeUrl;
     setIsLoading(true);
     setRequestError(false);
     try {
-      const recipe: Recipe = await getRecipe(recipeUrl);
+      const recipe: Recipe = await getRecipe(targetUrl);
       setRecipe(recipe);
     } catch (error) {
       setRequestError(true);
@@ -61,7 +88,7 @@ export const RecipePage = () => {
         <div className="findRecipeButtonContainer">
           <Button
             sx={{ textTransform: "lowercase" }}
-            onClick={handleRecipeSearch}
+            onClick={() => handleRecipeSearch()}
             disabled={isLoading}
             variant="contained"
             className="findRecipeButton"
