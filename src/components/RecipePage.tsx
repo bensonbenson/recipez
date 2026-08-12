@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TextField, Button } from "@mui/material";
+import { TextField, Button, FormControlLabel, Switch } from "@mui/material";
 import { getRecipe } from "../api/getRecipe";
 import { Recipe } from "../api/getRecipe";
 import { RecipeDetails } from "./RecipeDetails";
@@ -7,12 +7,16 @@ import { LoadingText } from "./LoadingText";
 import { isValidUrl } from "../utils/utils";
 import "../styles/RecipePage.css";
 
+const wakeLockSupported =
+  typeof navigator !== "undefined" && "wakeLock" in navigator;
+
 export const RecipePage = () => {
   const [recipeUrl, setRecipeUrl] = useState("");
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUrlError, setIsUrlError] = useState(false);
   const [requestError, setRequestError] = useState(false);
+  const [keepAwake, setKeepAwake] = useState(false);
 
   const updateUrlQuery = (url: string) => {
     const currentUrl = new URL(window.location.href);
@@ -38,6 +42,43 @@ export const RecipePage = () => {
       }
     }
   }, []);
+
+  // keep screen on toggle
+  useEffect(() => {
+    if (!keepAwake || !wakeLockSupported) return;
+
+    let wakeLock: WakeLockSentinel | null = null;
+    let cancelled = false;
+
+    const requestLock = async () => {
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+        if (cancelled) {
+          lock.release();
+          return;
+        }
+        wakeLock?.release();
+        wakeLock = lock;
+      } catch {
+        if (!cancelled) setKeepAwake(false);
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible" && keepAwake) {
+        requestLock();
+      }
+    };
+
+    requestLock();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      wakeLock?.release();
+    };
+  }, [keepAwake]);
 
   const handleRecipeUrlChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -99,7 +140,22 @@ export const RecipePage = () => {
       </form>
       {requestError && <h2>unsupported url!</h2>}
       {isLoading && <LoadingText />}
-      {recipe && <RecipeDetails recipe={recipe} />}
+      {recipe && (
+        <>
+          {wakeLockSupported && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={keepAwake}
+                  onChange={(e) => setKeepAwake(e.target.checked)}
+                />
+              }
+              label="keep screen on"
+            />
+          )}
+          <RecipeDetails recipe={recipe} />
+        </>
+      )}
     </div>
   );
 };
