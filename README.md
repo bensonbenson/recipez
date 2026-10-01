@@ -10,5 +10,5 @@ calls a flask backend (https://github.com/bensonbenson/recipe-retriever) to scra
 
 ```
 npm install
-npm run dev
+npm start
 ```
