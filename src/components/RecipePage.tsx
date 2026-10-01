@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
-import { TextField, Button, FormControlLabel, Switch } from "@mui/material";
-import { getRecipe } from "../api/getRecipe";
-import { Recipe } from "../api/getRecipe";
+import { getRecipe, Recipe } from "../api/getRecipe";
 import { RecipeDetails } from "./RecipeDetails";
 import { LoadingText } from "./LoadingText";
 import { isValidUrl } from "../utils/utils";
+import { useWakeLock, wakeLockSupported } from "../hooks/useWakeLock";
 import "../styles/RecipePage.css";
-
-const wakeLockSupported =
-  typeof navigator !== "undefined" && "wakeLock" in navigator;
 
 export const RecipePage = () => {
   const [recipeUrl, setRecipeUrl] = useState("");
@@ -16,7 +12,7 @@ export const RecipePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUrlError, setIsUrlError] = useState(false);
   const [requestError, setRequestError] = useState(false);
-  const [keepAwake, setKeepAwake] = useState(false);
+  const [keepAwake, setKeepAwake] = useWakeLock();
 
   const updateUrlQuery = (url: string) => {
     const currentUrl = new URL(window.location.href);
@@ -43,54 +39,13 @@ export const RecipePage = () => {
     }
   }, []);
 
-  // keep screen on toggle
-  useEffect(() => {
-    if (!keepAwake || !wakeLockSupported) return;
-
-    let wakeLock: WakeLockSentinel | null = null;
-    let cancelled = false;
-
-    const requestLock = async () => {
-      try {
-        const lock = await navigator.wakeLock.request("screen");
-        if (cancelled) {
-          lock.release();
-          return;
-        }
-        wakeLock?.release();
-        wakeLock = lock;
-      } catch {
-        if (!cancelled) setKeepAwake(false);
-      }
-    };
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible" && keepAwake) {
-        requestLock();
-      }
-    };
-
-    requestLock();
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      wakeLock?.release();
-    };
-  }, [keepAwake]);
-
   const handleRecipeUrlChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { value } = event.target;
     setRecipeUrl(value);
     updateUrlQuery(value);
-    if (value && !isValidUrl(value)) {
-      setIsUrlError(true);
-    } else {
-      setIsUrlError(false);
-    }
+    setIsUrlError(!!value && !isValidUrl(value));
   };
 
   const handleRecipeSearch = async (urlToSearch?: string) => {
@@ -98,9 +53,8 @@ export const RecipePage = () => {
     setIsLoading(true);
     setRequestError(false);
     try {
-      const recipe: Recipe = await getRecipe(targetUrl);
-      setRecipe(recipe);
-    } catch (error) {
+      setRecipe(await getRecipe(targetUrl));
+    } catch {
       setRequestError(true);
     }
 
@@ -116,26 +70,22 @@ export const RecipePage = () => {
     <div className="basePage">
       <h1>recip-ez</h1>
       <form onSubmit={handleSubmit}>
-        <TextField
-          variant="outlined"
-          label="recipe url"
+        <label htmlFor="recipeUrl" className="urlLabel">recipe url</label>
+        <input
+          id="recipeUrl"
+          type="text"
+          inputMode="url"
           onChange={handleRecipeUrlChange}
           value={recipeUrl}
           disabled={isLoading}
-          error={isUrlError}
-          helperText={isUrlError ? "invalid url" : ""}
-          style={{ width: "100%" }}
+          aria-invalid={isUrlError}
+          aria-describedby={isUrlError ? "recipeUrlError" : undefined}
         />
+        {isUrlError && <p id="recipeUrlError" className="urlError">invalid url</p>}
         <div className="findRecipeButtonContainer">
-          <Button
-            sx={{ textTransform: "lowercase" }}
-            onClick={() => handleRecipeSearch()}
-            disabled={isLoading}
-            variant="contained"
-            className="findRecipeButton"
-          >
+          <button type="submit" disabled={isLoading || !isValidUrl(recipeUrl)} className="findRecipeButton">
             give recipe
-          </Button>
+          </button>
         </div>
       </form>
       {requestError && <h2>unsupported url!</h2>}
@@ -143,15 +93,15 @@ export const RecipePage = () => {
       {recipe && (
         <>
           {wakeLockSupported && (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={keepAwake}
-                  onChange={(e) => setKeepAwake(e.target.checked)}
-                />
-              }
-              label="keep screen on"
-            />
+            <label className="keepAwake">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={keepAwake}
+                onChange={(e) => setKeepAwake(e.target.checked)}
+              />
+              keep screen on
+            </label>
           )}
           <RecipeDetails recipe={recipe} />
         </>
