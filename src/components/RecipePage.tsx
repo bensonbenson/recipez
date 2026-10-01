@@ -6,6 +6,21 @@ import { isValidUrl } from "../utils/utils";
 import { useWakeLock, wakeLockSupported } from "../hooks/useWakeLock";
 import "../styles/RecipePage.css";
 
+const updateUrlQuery = (url: string) => {
+  const currentUrl = new URL(window.location.href);
+  if (url.trim()) {
+    currentUrl.searchParams.set('recipeUrl', url);
+  } else {
+    currentUrl.searchParams.delete('recipeUrl');
+  }
+  window.history.replaceState({}, '', currentUrl.toString());
+};
+
+const getUrlFromQuery = (): string => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('recipeUrl') || '';
+};
+
 export const RecipePage = () => {
   const [recipeUrl, setRecipeUrl] = useState("");
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -13,21 +28,6 @@ export const RecipePage = () => {
   const [isUrlError, setIsUrlError] = useState(false);
   const [requestError, setRequestError] = useState(false);
   const [keepAwake, setKeepAwake] = useWakeLock();
-
-  const updateUrlQuery = (url: string) => {
-    const currentUrl = new URL(window.location.href);
-    if (url.trim()) {
-      currentUrl.searchParams.set('recipeUrl', url);
-    } else {
-      currentUrl.searchParams.delete('recipeUrl');
-    }
-    window.history.replaceState({}, '', currentUrl.toString());
-  };
-
-  const getUrlFromQuery = (): string => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('recipeUrl') || '';
-  };
 
   useEffect(() => {
     const urlFromQuery = getUrlFromQuery();
